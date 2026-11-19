@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" preserveAspectRatio="xMidYMid slice">
+  <filter id="g"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2"/><feColorMatrix values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .06 0"/></filter>
+  <defs>
+    <g id="p">
+      <path d="M0 0 C24 -60 -8 -130 42 -196 C58 -214 76 -208 84 -188" fill="none" stroke="#d3202b" stroke-width="18" stroke-linecap="round"/>
+      <path d="M0 0 C40 -80 70 -190 150 -270" fill="none" stroke="#f06a5c" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="150" cy="-270" r="8" fill="#ece6d8"/>
+    </g>
+  </defs>
+  <rect width="1280" height="800" fill="#0b1236"/>
+  <circle cx="1010" cy="170" r="66" fill="none" stroke="#ece6d8" stroke-width="4" opacity=".5"/>
+  <circle cx="1010" cy="170" r="104" fill="none" stroke="#ece6d8" stroke-width="3" opacity=".28"/>
+  <circle cx="1010" cy="170" r="150" fill="none" stroke="#ece6d8" stroke-width="2" opacity=".14"/>
+  <path d="M1010 118 C976 118 972 156 966 192 L952 212 H1068 L1054 192 C1048 156 1044 118 1010 118 Z" fill="#ece6d8" opacity=".85"/>
+  <g fill="none" stroke="#2f3fc4" stroke-width="5" stroke-linecap="round">
+    <path d="M0 640 C200 610 380 670 640 640 S1060 610 1280 650"/><path d="M0 690 C240 660 430 720 680 690 S1060 660 1280 700" opacity=".7"/><path d="M0 742 C220 714 460 770 700 742 S1100 716 1280 750" opacity=".4"/>
+  </g>
+  <path d="M500 400 C490 520 520 640 500 800" fill="none" stroke="#3d7a52" stroke-width="12" stroke-linecap="round"/>
+  <g transform="translate(500 400)">
+    <use href="#p" transform="rotate(-140)"/><use href="#p" transform="rotate(-100)"/><use href="#p" transform="rotate(-60)"/><use href="#p" transform="rotate(-20)"/><use href="#p" transform="rotate(20)"/><use href="#p" transform="rotate(60)"/><use href="#p" transform="rotate(100)"/>
+    <circle r="16" fill="#d3202b"/>
+  </g>
+  <rect width="1280" height="800" filter="url(#g)"/>
+</svg>

@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>李上 Locrian：声音、音乐与 AIGC</title>
+<meta name="description" content="李上（Locrian），影视后期声音制作人、AIMV 制作人、录音师。中国录音艺术，英国音频科技。让 AI 作为手段，打通视、听、嗅的通感体验。" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231c2bb0'/%3E%3Cg stroke='%23ece6d8' stroke-width='1.2'%3E%3Cpath d='M3 10h26M3 14h26M3 18h26M3 22h26'/%3E%3C/g%3E%3Cellipse cx='16' cy='16' rx='5' ry='3.6' transform='rotate(-22 16 16)' fill='%23ece6d8'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Noto+Serif+SC:wght@400;600;900&family=Archivo+Narrow:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ===================================================================
+   李上 Locrian — 一张七音的图形乐谱
+   洛克利亚调式 B C D E F G A：1 ♭2 ♭3 4 ♭5 ♭6 ♭7，正好七个段落
+   =================================================================== */
+:root{
+  --paper:#fcfcfa;      /* 纸：白 */
+  --klein:#1c2bb0;      /* 墨：克莱因蓝 */
+  --klein-deep:#141f86;
+  --night:#0b1236;      /* 夜：作品区 */
+  --bone:#1c2bb0;       /* 字与线：克莱因蓝 */
+  --rose:#c94f78;       /* 音乐 / 香 */
+  --ochre:#a8820f;      /* 三全音的字 */
+  --sulfur:#e6cf4e;     /* 三全音 / AIGC */
+  --mist:rgba(28,43,176,.62);
+  --hair:rgba(28,43,176,.16);
+
+  --serif:"Bodoni Moda","Noto Serif SC","Songti SC","STSong",serif;
+  --cn:"Noto Serif SC","Songti SC","STSong","SimSun",serif;
+  --sans:"Archivo Narrow","PingFang SC","Microsoft YaHei",sans-serif;
+
+  --pad:clamp(20px,4.4vw,72px);
+  --rail:clamp(150px,22vw,330px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--bone);font-family:var(--cn);font-size:16px;line-height:1.85;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+img{display:block;max-width:100%}
+:focus-visible{outline:2px solid var(--klein);outline-offset:4px;border-radius:2px}
+::selection{background:var(--klein);color:#fff}
+
+/* 纸面颗粒：只给蓝色和骨白的面 */
+.paper{position:relative;isolation:isolate}
+.paper::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.05;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* ---------- 顶部迷你谱：当前段落的音高 ---------- */
+.mini{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:24px;
+  padding:14px var(--pad);transform:translateY(-100%);transition:transform .5s cubic-bezier(.2,.7,.2,1);
+  background:linear-gradient(var(--paper) 62%,rgba(252,252,250,0))}
+.mini.on{transform:none}
+.mini-name{font-family:var(--serif);font-style:italic;font-size:19px;text-decoration:none;letter-spacing:.01em;white-space:nowrap}
+.mini-name span{font-family:var(--cn);font-style:normal;font-size:14px;margin-right:.5em}
+.mini-staff{position:relative;width:min(340px,52vw);height:28px;
+  background:repeating-linear-gradient(to bottom,transparent 0 3px,var(--hair) 3px 4px) 0 6px/100% 20px no-repeat}
+.mini-staff a{position:absolute;bottom:calc(6px + var(--s) * 2px);left:var(--x);width:9px;height:6px;margin-left:-4px;border-radius:50%;
+  border:1px solid var(--mist);transform:rotate(-22deg);transition:background .3s,border-color .3s}
+.mini-staff a.cur{background:var(--klein);border-color:var(--klein)}
+.mini-staff a span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ---------- 1 首屏：会被拨响的五线 ---------- */
+.hero{position:relative;height:clamp(560px,76svh,720px);background:var(--paper);overflow:hidden}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:pan-y}
+.hero-top{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:baseline;padding:22px var(--pad);z-index:3;font-family:var(--sans);font-size:14px;letter-spacing:.02em}
+.hero-top .who b{font-family:var(--cn);font-weight:600;font-size:15px;margin-right:.6em}
+.hero-top .ct a{margin-left:1.4em;text-decoration:none;white-space:nowrap}
+.hero-top .ct a:hover{text-decoration:underline}
+.snd{appearance:none;border:1px solid var(--mist);background:none;color:var(--bone);font:inherit;padding:6px 14px 6px 12px;border-radius:99px;cursor:pointer;display:inline-flex;align-items:center;gap:9px}
+.snd i{width:7px;height:7px;border-radius:50%;border:1px solid currentColor}
+.snd[aria-pressed="true"]{background:var(--bone);color:var(--klein)}
+.snd[aria-pressed="true"] i{background:currentColor}
+
+.notes{position:absolute;inset:0;z-index:2;pointer-events:none}
+.note{position:absolute;left:0;top:0;pointer-events:auto;text-decoration:none;color:var(--bone);will-change:transform}
+.note .head{position:absolute;left:-14px;top:-10px;width:28px;height:20px;border-radius:50%;background:var(--bone);transform:rotate(-22deg);transition:transform .3s,background .3s}
+.note .stem{position:absolute;left:12px;bottom:4px;width:1.4px;height:calc(var(--gap) * 3.4);background:var(--bone)}
+.note.down .stem{left:-13px;bottom:auto;top:4px}
+.note .cap{position:absolute;left:-40px;width:80px;text-align:center;top:var(--cap);line-height:1.25;white-space:nowrap}
+.note .deg{display:block;font-family:var(--serif);font-size:clamp(20px,2.2vw,32px);font-weight:500}
+.note .lab{display:block;font-family:var(--cn);font-size:13px;opacity:.82;margin-top:4px}
+.note:hover .head,.note:focus-visible .head{background:var(--sulfur);transform:rotate(-22deg) scale(1.25)}
+.note.here .head{background:transparent;border:1.6px solid var(--bone)}
+.note.tri .head{background:var(--sulfur);box-shadow:0 0 0 1.4px var(--klein)}
+
+.hero-title{position:absolute;left:calc(var(--pad) - .05em);top:clamp(46px,5vh,64px);z-index:1;font-family:var(--serif);font-style:italic;font-weight:400;
+  font-size:clamp(96px,15vw,240px);line-height:.95;letter-spacing:-.035em;font-variation-settings:"opsz" 96;pointer-events:none;
+  opacity:0;transform:translateY(.2em);animation:rise 1.6s .25s cubic-bezier(.2,.7,.1,1) forwards}
+.hero-say{position:absolute;right:var(--pad);top:calc(clamp(46px,5vh,64px) + clamp(96px,15vw,240px) * .42);z-index:3;width:min(340px,30vw);font-size:15px;line-height:1.95;border-left:1px solid var(--hair);padding-left:20px}
+.hero-say p+p{margin-top:.9em;font-family:var(--sans);font-size:13px;color:var(--mist);letter-spacing:.02em}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* ---------- 通用段落：左侧是音级 ---------- */
+.deg-sec{display:grid;grid-template-columns:var(--rail) minmax(0,1fr);column-gap:clamp(24px,4vw,72px);padding:clamp(90px,14vh,150px) var(--pad)}
+.rail{position:relative}
+.rail-in{position:sticky;top:96px}
+.rail .d{font-family:var(--serif);font-weight:400;font-size:clamp(76px,9vw,150px);line-height:.9;letter-spacing:-.03em;display:block}
+.rail h2{font-family:var(--cn);font-weight:900;font-size:clamp(24px,2.4vw,34px);line-height:1.3;margin-top:22px;letter-spacing:.04em}
+.rail h2 span{display:block;font-family:var(--serif);font-style:italic;font-weight:400;font-size:.7em;letter-spacing:0;color:var(--mist);margin-top:2px}
+.rail p{font-family:var(--sans);font-size:14px;color:var(--mist);margin-top:14px;max-width:24ch;line-height:1.6}
+
+/* ---------- ♭2 关于 ---------- */
+.about{background:var(--paper);border-top:1px solid var(--hair);position:relative;overflow:hidden;padding-top:clamp(56px,8vh,90px);padding-bottom:calc(clamp(21px,2.25vw,33px) + clamp(36px,5vh,60px))}
+.about .sil{position:absolute;left:clamp(120px,12vw,200px);bottom:0;width:min(44vw,640px);height:auto;z-index:0;pointer-events:none;filter:drop-shadow(0 30px 50px rgba(28,43,176,.16))}
+.about .rail,.about .ab-body{position:relative;z-index:1}
+/* 底部蓝色条纹带：托住照片下沿 */
+.ab-band{position:absolute;left:0;right:0;bottom:0;z-index:2;height:clamp(21px,2.25vw,33px);
+  background:
+    repeating-linear-gradient(to bottom,transparent 0 9px,rgba(255,255,255,.22) 9px 10px),
+    repeating-linear-gradient(-45deg,#1c2bb0 0 12px,#2536c2 12px 24px);
+  box-shadow:0 -1px 0 #1c2bb0,0 -10px 0 -8px rgba(28,43,176,.0)}
+.ab-band::before{content:"";position:absolute;left:0;right:0;top:-14px;height:6px;background:repeating-linear-gradient(90deg,#1c2bb0 0 2px,transparent 2px 7px)}
+.ab-body{grid-column:2;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);column-gap:clamp(24px,4vw,64px);row-gap:0}
+.ab-body .spacer{min-height:0}
+.ab-text{max-width:32em;font-size:14.5px;line-height:1.7}
+.ab-lead{font-size:clamp(17px,1.45vw,20px);line-height:1.6;font-weight:600}
+.ab-lead + p{margin-top:.7em;color:var(--mist)}
+.roles{list-style:none;margin-top:22px;border-top:1px solid var(--hair)}
+.roles li{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:6px 0;border-bottom:1px solid var(--hair)}
+.roles li b{font-weight:600;font-size:15px}
+.roles li span{font-family:var(--serif);font-style:italic;font-size:13.5px;color:var(--mist)}
+.path{margin-top:20px;display:flex;align-items:center;gap:14px;font-size:14px}
+.path em{font-family:var(--serif);font-size:19px}
+.path i{flex:1;height:1px;background:var(--bone);position:relative;max-width:180px}
+.path i::after{content:"";position:absolute;right:-1px;top:-4px;border:4.5px solid transparent;border-left:7px solid var(--bone);border-right:0}
+.motto{margin-top:22px;font-size:clamp(18px,1.7vw,24px);line-height:1.5;font-weight:900;letter-spacing:.02em}
+.sign{margin-top:10px;font-family:var(--serif);font-style:italic;font-size:17px;color:var(--mist)}
+.lines3{grid-column:2;margin-top:22px;display:grid;grid-template-columns:1fr;gap:10px;border-top:1px solid var(--bone);padding-top:16px;max-width:32em}
+.lines3 h3{font-weight:900;font-size:15.5px;display:flex;align-items:center;gap:10px}
+.lines3 h3 i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.lines3 p{margin-top:2px;font-size:13.5px;color:var(--mist);line-height:1.65}
+
+/* ---------- 作品 ---------- */
+.works-sec{background:var(--paper)}
+.works-sec#sound{border-top:1px solid var(--hair)}
+.works-sec + .works-sec{padding-top:0}
+.works-sec .rail-in{padding-top:6px}
+.wlist{list-style:none;border-top:1px solid var(--hair)}
+.work{display:grid;grid-template-columns:clamp(120px,16vw,220px) minmax(0,1fr) auto;gap:clamp(18px,3vw,44px);align-items:center;padding:26px 0;border-bottom:1px solid var(--hair)}
+.work .g{aspect-ratio:5/3;width:100%;color:var(--c,var(--bone))}
+.work .g svg{width:100%;height:100%;display:block;overflow:visible}
+.work .g img{width:100%;height:100%;object-fit:cover;object-position:top;border-radius:3px;filter:saturate(.9);box-shadow:0 0 0 1px var(--hair)}
+.work h3{font-family:var(--cn);font-weight:900;font-size:clamp(20px,2vw,27px);line-height:1.35;letter-spacing:.02em}
+.work h3 span{font-family:var(--serif);font-style:italic;font-weight:400;font-size:.78em;color:var(--mist);margin-left:.45em;letter-spacing:0}
+.work p{margin-top:6px;color:var(--mist);font-size:15px;line-height:1.75;max-width:40em}
+.work .m{font-family:var(--sans);font-size:13px;color:var(--mist);text-align:right;line-height:1.5;white-space:nowrap}
+.work .m b{display:block;font-family:var(--serif);font-weight:400;font-size:20px;color:var(--bone)}
+.work.big{grid-template-columns:clamp(200px,30vw,440px) minmax(0,1fr) auto}
+.work .g .award{position:absolute}
+.badge{display:inline-block;margin-top:10px;font-family:var(--sans);font-size:13px;padding:2px 10px;border:1px solid var(--ochre);color:var(--ochre);border-radius:99px}
+
+/* 音乐人块 */
+.artist{display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(24px,5vw,80px);align-items:end;padding:10px 0 40px}
+.artist .num{font-family:var(--serif);font-weight:400;font-size:clamp(90px,11vw,170px);line-height:.85;color:var(--rose);letter-spacing:-.03em}
+.artist .num small{font-size:.4em;font-style:italic;margin-left:.06em}
+.artist p{color:var(--mist);max-width:30em}
+.artist p strong{color:var(--bone);font-weight:600}
+.tracks{list-style:none;margin-top:16px}
+.tracks a{display:flex;align-items:baseline;gap:14px;padding:9px 0;text-decoration:none;border-bottom:1px solid var(--hair);max-width:30em}
+.tracks a span{flex:1;font-weight:600}
+.tracks a em{font-family:var(--sans);font-style:normal;font-size:13px;color:var(--rose)}
+.tracks a:hover span{color:var(--rose)}
+
+/* ♭5 三全音提示 */
+.tritone{border-left:2px solid var(--sulfur);padding-left:14px;margin-top:18px}
+
+
+/* ---------- 层叠卡牌 ---------- */
+.works-sec .deg-body{min-width:0}
+.drag-hint{display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:13px;color:var(--mist);margin-bottom:6px}
+.drag-hint svg{width:34px;height:14px}
+.drag-hint svg .h{animation:nudge 1.8s ease-in-out infinite}
+@keyframes nudge{0%,100%{transform:translateX(-4px)}50%{transform:translateX(4px)}}
+.flow{position:relative;height:clamp(340px,32vw,420px);perspective:1300px;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none;outline:none;overflow:visible}
+.flow:focus-visible{outline:1px solid var(--hair);outline-offset:6px;border-radius:20px}
+.flow.dragging{cursor:grabbing}
+.flow::after{content:"";position:absolute;left:50%;bottom:0;width:min(520px,80%);height:56px;translate:-50% 0;border-radius:50%;background:radial-gradient(closest-side,rgba(28,43,176,.12),transparent);pointer-events:none}
+.stage{position:absolute;inset:0;transform-style:preserve-3d}
+.fc{--cw:clamp(150px,13vw,190px);--c:#2b59c3;position:absolute;left:50%;top:46%;width:var(--cw);height:calc(var(--cw) * 1.4);margin:calc(var(--cw) * -.7) 0 0 calc(var(--cw) * -.5);
+  border-radius:16px;padding:8px;text-align:left;color:var(--klein);font:inherit;cursor:inherit;will-change:transform,opacity,filter;
+  background:#fff;border:1px solid color-mix(in srgb,var(--c) 22%,#e3e6f1);
+  box-shadow:0 26px 44px -24px rgba(28,43,176,.38),0 2px 6px rgba(28,43,176,.05)}
+.fc.on{box-shadow:0 34px 60px -22px color-mix(in srgb,var(--c) 60%,rgba(28,43,176,.5)),0 0 0 1px color-mix(in srgb,var(--c) 40%,transparent)}
+.fc .cover{position:relative;display:block;height:60%;border-radius:10px;overflow:hidden;color:#fff;
+  background:radial-gradient(120% 90% at 20% 10%,color-mix(in srgb,var(--c) 70%,#fff 30%) 0%,transparent 58%),linear-gradient(155deg,var(--c),color-mix(in srgb,var(--c) 70%,#0b1236))}
+.fc .cover .art{position:absolute;inset:14% 8%;opacity:.85}
+.fc .cover .art svg{width:100%;height:100%;overflow:visible}
+.fc .cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top}
+.fc .yr{position:absolute;right:8px;top:6px;font-family:var(--serif);font-style:italic;font-size:12px;opacity:.9}
+.fc .aw{position:absolute;left:8px;top:7px;font-family:var(--sans);font-size:10px;padding:1px 7px;border-radius:99px;background:var(--sulfur);color:var(--night);font-weight:600}
+.fc .tx{display:block;padding:10px 4px 0}
+.fc h4{font-family:var(--cn);font-weight:900;font-size:clamp(15px,1.2vw,18px);line-height:1.25;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc .en{display:block;font-family:var(--serif);font-style:italic;font-size:13px;color:var(--mist);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc .kd{position:absolute;left:12px;bottom:10px;right:10px;display:flex;align-items:center;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mist);white-space:nowrap;overflow:hidden}
+.fc .kd i{flex:none;width:7px;height:7px;border-radius:50%;background:var(--c)}
+
+/* ---------- 详情抽屉 ---------- */
+dialog.case{margin:auto 0 auto auto;height:100%;max-height:100%;width:min(620px,100%);max-width:100%;border:0;padding:0;background:var(--paper);color:var(--bone);border-left:1px solid var(--hair);overflow:auto}
+dialog.case::backdrop{background:rgba(28,43,176,.18);backdrop-filter:blur(6px)}
+dialog.case[open]{animation:slidein .5s cubic-bezier(.2,.7,.2,1)}
+@keyframes slidein{from{transform:translateX(40px);opacity:0}}
+.case .cv{aspect-ratio:16/10;position:relative;border-bottom:1px solid var(--hair);color:#fff}
+.case .cv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top}
+.case .cv .art{position:absolute;inset:14% 10%}
+.case .cv .art svg{width:100%;height:100%;overflow:visible}
+.case .x{position:absolute;right:16px;top:16px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.8);border:1px solid var(--hair);display:grid;place-items:center;color:var(--klein);cursor:pointer;backdrop-filter:blur(6px)}
+.case .x svg{width:14px;height:14px}
+.case .cb{padding:30px 32px 40px}
+.case .ck{font-family:var(--sans);font-size:13px;color:var(--mist)}
+.case h3{font-family:var(--cn);font-weight:900;font-size:clamp(30px,4vw,42px);line-height:1.2;letter-spacing:.02em;margin-top:8px}
+.case h3 span{display:block;font-family:var(--serif);font-style:italic;font-weight:400;font-size:.55em;color:var(--mist);letter-spacing:0;margin-top:4px}
+.case .cd{margin-top:18px;color:var(--bone);opacity:.88}
+.case .cm:empty{display:none}
+.case .cm{margin-top:22px;display:grid;gap:14px}
+.case .cm video,.case .cm audio{display:block;width:100%}
+.case .cm video{background:#000;aspect-ratio:16/9}
+.case .cm .ml{font-family:var(--sans);font-size:13px;color:var(--mist);margin-bottom:-6px}
+.case .cdoc summary{font-family:var(--sans);font-size:14px;cursor:pointer;color:var(--klein)}
+.case .cdoc p{margin-top:12px;font-size:15px;line-height:1.8;opacity:.88}
+.case .aw2{display:inline-block;margin-top:14px;font-family:var(--sans);font-size:13px;padding:2px 10px;border:1px solid var(--ochre);color:var(--ochre);border-radius:99px}
+.case dl{display:grid;grid-template-columns:90px 1fr;gap:12px 20px;margin-top:26px;padding-top:22px;border-top:1px solid var(--hair);font-size:15px}
+.case dt{font-family:var(--sans);font-size:13px;color:var(--mist);padding-top:3px}
+.case .tools{display:flex;flex-wrap:wrap;gap:6px}
+.case .tools span{font-family:var(--sans);font-size:12.5px;padding:2px 10px;border-radius:99px;border:1px solid var(--hair)}
+.case .nx{display:flex;justify-content:space-between;gap:10px;margin-top:34px}
+.case .nx button{font-family:var(--sans);font-size:14px;padding:9px 18px;border-radius:99px;border:1px solid var(--mist);background:none;color:var(--bone);cursor:pointer}
+.case .nx button:last-child{background:var(--klein);color:#fff;border-color:var(--klein)}
+@media (max-width:760px){ .fc .kd{display:none} .works-sec{overflow-x:clip} }
+
+/* ---------- ♭6 经历 ---------- */
+.journey{background:var(--paper);border-top:1px solid var(--hair)}
+.tl{list-style:none}
+.tl li{display:grid;grid-template-columns:clamp(110px,13vw,190px) minmax(0,1fr);gap:clamp(18px,3vw,44px);padding:30px 0;border-bottom:1px solid var(--hair)}
+.tl li:first-child{padding-top:0}
+.tl .y{font-family:var(--serif);font-size:clamp(38px,4.4vw,64px);line-height:1;letter-spacing:-.02em}
+.tl .y small{display:block;font-family:var(--sans);font-size:13px;color:var(--mist);letter-spacing:.02em;margin-top:8px}
+.tl h3{font-weight:900;font-size:clamp(19px,1.8vw,24px);line-height:1.45}
+.tl p{margin-top:8px;color:var(--mist);max-width:40em}
+
+/* ---------- ♭7 联系：最后一页，印在纸上 ---------- */
+.contact{background:var(--klein);color:#fff;--hair:rgba(255,255,255,.25);--mist:rgba(255,255,255,.72)}
+.contact .rail .d{color:#fff}
+.say{font-weight:900;font-size:clamp(46px,8vw,128px);line-height:1.12;letter-spacing:.02em}
+.mail{display:inline-block;margin-top:28px;font-family:var(--serif);font-style:italic;font-size:clamp(28px,4.6vw,72px);line-height:1.15;text-decoration:none;
+  background:linear-gradient(currentColor,currentColor) 0 100%/0 2px no-repeat;transition:background-size .5s cubic-bezier(.2,.7,.2,1);word-break:break-all}
+.mail:hover,.mail:focus-visible{background-size:100% 2px}
+.clist{list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;margin-top:clamp(50px,9vh,90px);border-top:1px solid #fff;padding-top:18px}
+.clist span{display:block;font-family:var(--sans);font-size:13px;color:var(--mist)}
+.clist b,.clist a{font-weight:600;font-size:16px}
+.foot{display:flex;justify-content:space-between;gap:20px;padding:22px var(--pad) 28px;background:var(--klein);color:var(--mist);font-family:var(--sans);font-size:13px;border-top:1px solid var(--hair);--hair:rgba(255,255,255,.22);--mist:rgba(255,255,255,.7)}
+.foot a{text-decoration:none}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:980px){
+  .ab-body{grid-template-columns:1fr}
+  .ab-body .spacer{display:none}
+  .lines3{grid-column:1}
+  .about .sil{position:relative;grid-column:1/-1;order:-1;width:min(460px,100%);left:auto;margin:-40px auto 0}
+  .ab-band{position:relative;grid-column:1/-1;order:-1;height:16px;margin:-16px calc(-1 * var(--pad)) 24px}
+  .about{padding-bottom:clamp(48px,7vh,80px)}
+  .clist{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:760px){
+  .deg-sec{grid-template-columns:1fr;row-gap:36px}
+  .ab-body{grid-column:1}
+  .rail-in{position:static}
+  .rail .d{font-size:84px}
+  .lines3{grid-template-columns:1fr}
+  .work,.work.big{grid-template-columns:96px minmax(0,1fr);gap:8px 16px;align-items:start}
+  .work.big:has(img){grid-template-columns:1fr}
+  .work .m{grid-column:2}
+  .work.big:has(img) .m{grid-column:1}
+  .work .m{text-align:left;display:flex;gap:12px;align-items:baseline}
+  .work .m b{display:inline;font-size:17px}
+  .artist{grid-template-columns:1fr;gap:10px}
+  .tl li{grid-template-columns:1fr;gap:10px}
+  .hero-say{left:var(--pad);right:var(--pad);width:auto;top:calc(56px + 27vw);border-left:0;padding-left:0;font-size:14.5px}
+  .hero-title{font-size:27vw;top:52px}
+  .hero{height:clamp(540px,74svh,660px)}
+  .note .lab{font-size:11px}
+  .note .cap{left:-28px;width:56px}
+  .mini-name span{display:none}
+  .hero-top .tg{display:none}
+  .hero-top .ct a{margin-left:.9em}
+  .foot{flex-direction:column;gap:6px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .hero-title{animation:none;opacity:1;transform:none}
+  *{transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- 顶部迷你谱：滚出首屏后出现，实心音符是你所在的段落 -->
+<nav class="mini" id="mini" aria-label="段落">
+  <a class="mini-name" href="#top"><span>李上</span>Locrian</a>
+  <div class="mini-staff" id="miniStaff"></div>
+</nav>
+
+<main>
+
+<!-- ============ 1 · B · 首屏 ============ -->
+<section class="hero paper" id="top" aria-label="李上 Locrian">
+  <canvas id="staff" aria-hidden="true"></canvas>
+
+  <div class="hero-top">
+    <span class="who"><b>李上</b><span class="tg">声音、音乐与 AIGC</span><span class="ct"><a href="mailto:zczq452@ucl.ac.uk">zczq452@ucl.ac.uk</a><a href="tel:+8618600873628">186 0087 3628</a></span></span>
+  </div>
+
+  <div class="notes" id="notes"></div>
+
+  <h1 class="hero-title">Locrian</h1>
+
+  <div class="hero-say">
+    <p>我做影视后期声音、空间音频和生成式音乐。让 AI 作为手段，把视觉、听觉和嗅觉接到一起。</p>
+  </div>
+</section>
+
+<!-- ============ ♭2 · C · 关于 ============ -->
+<section class="about deg-sec paper" id="about">
+  <img class="sil" src="assets/img/portrait.webp" alt="李上（Locrian）的照片" width="900" height="894" />
+  <span class="ab-band" aria-hidden="true"></span>
+  <div class="rail"><div class="rail-in">
+    <span class="d">♭2</span>
+    <h2>关于我<span>About</span></h2>
+  </div></div>
+
+  <div class="ab-body">
+    <div class="spacer" aria-hidden="true"></div>
+    <div class="ab-text">
+      <p class="ab-lead">从录音艺术出发，做影视后期声音、空间音频与生成式音乐。</p>
+
+      <p class="path"><em>China</em>录音艺术<i aria-hidden="true"></i><em>UK</em>音频科技</p>
+
+      <p class="motto">让 AI 科技作为手段，<br />目标是打通视、听、嗅的通感体验。</p>
+      <p class="sign">— 李上 Locrian</p>
+
+      <ul class="roles">
+        <li><b>影视后期声音制作人</b><span>post sound</span></li>
+        <li><b>AIMV 制作人</b><span>AI music video</span></li>
+        <li><b>AIGC 创意社创始人</b><span>founder</span></li>
+        <li><b>中国传媒大学 AI 部创始人</b><span>founder</span></li>
+        <li><b>录音师</b><span>recording</span></li>
+        <li><b>音乐香水品牌主理人</b><span>scent</span></li>
+      </ul>
+    </div>
+
+    <div class="lines3">
+      <div style="--c:var(--bone)"><h3><i></i>声音作品</h3><p>声音是我看世界的方式。从同期录音到三维声场，作品在 VR、影像和音乐厅里同时成立。</p></div>
+      <div style="--c:var(--rose)"><h3><i></i>音乐制作</h3><p>音乐是我记住它的方式。作曲、编曲、混音到发行，给游戏和影像写配乐，也写自己的歌。</p></div>
+      <div style="--c:var(--sulfur)"><h3><i></i>AIGC 与产品设计</h3><p>让前两件事能被反复使用的那层结构。判断模型的能力边界，把想法压成一版能点开的东西。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ♭3 · D · 声音作品 ============ -->
+<section class="works-sec deg-sec" id="sound">
+  <div class="rail"><div class="rail-in">
+    <span class="d">♭3</span>
+    <h2>声音作品<span>Sound works</span></h2>
+    <p>六件作品。VR、影像、空间音频与交响同期。</p>
+  </div></div>
+
+  <div class="deg-body"><p class="drag-hint"><svg viewBox="0 0 34 14" aria-hidden="true"><path d="M5 3 1 7l4 4M29 3l4 4-4 4M1 7h32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><circle class="h" cx="17" cy="7" r="3.2" fill="currentColor"/></svg>按住卡牌左右拖动，切换作品</p>
+  <div class="flow" data-k="sound" tabindex="0" role="group" aria-roledescription="carousel" aria-label="声音作品，左右拖动或用方向键切换"><div class="stage"></div></div></div>
+</section>
+
+<!-- ============ 4 · E · 音乐制作 ============ -->
+<section class="works-sec deg-sec" id="music">
+  <div class="rail"><div class="rail-in">
+    <span class="d" style="color:var(--rose)">4</span>
+    <h2>音乐制作<span>Music</span></h2>
+    <p>纯四度，调式里唯一没被降低的音。写歌是我最早开始做的事。</p>
+  </div></div>
+
+  <div>
+    <div class="artist">
+      <div class="num">1w<small>+</small></div>
+      <div>
+        <p><strong>网易云认证音乐人，单曲最高播放破万。</strong>从高中开始写歌，钢琴和电子琴打底，编曲、作曲、混音独立完成。</p>
+        <ul class="tracks">
+          <li><a href="https://music.163.com/#/song?id=2158774942" target="_blank" rel="noopener"><span>白房间 OST：主题</span><em>在网易云收听</em></a></li>
+          <li><a href="https://music.163.com/#/song?id=2158774102" target="_blank" rel="noopener"><span>白房间 OST：尾声</span><em>在网易云收听</em></a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="flow" data-k="music" tabindex="0" role="group" aria-roledescription="carousel" aria-label="音乐制作作品，左右拖动或用方向键切换"><div class="stage"></div></div>
+  </div>
+</section>
+
+<!-- ============ ♭5 · F · AIGC 与产品设计 ============ -->
+<section class="works-sec deg-sec" id="aigc">
+  <div class="rail"><div class="rail-in">
+    <span class="d" style="color:var(--ochre)">♭5</span>
+    <h2 style="word-break:keep-all">AIGC 与产品设计<span>AIGC &amp; product design</span></h2>
+    <p class="tritone">三全音，调式里最不稳定的一个音。也是我最想往前推的一条线。</p>
+  </div></div>
+
+  <div class="deg-body"><div class="flow" data-k="aigc" tabindex="0" role="group" aria-roledescription="carousel" aria-label="AIGC 与产品设计作品，左右拖动或用方向键切换"><div class="stage"></div></div></div>
+</section>
+
+<dialog class="case" id="case" aria-labelledby="caseT">
+  <div class="cv" id="caseV"></div>
+  <button class="x" id="caseX" type="button" aria-label="关闭"><svg viewBox="0 0 14 14"><path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+  <div class="cb">
+    <span class="ck" id="caseK"></span>
+    <h3 id="caseT"></h3>
+    <p class="cd" id="caseD"></p>
+    <div class="cm" id="caseM"></div>
+    <div id="caseA"></div>
+    <dl>
+      <dt>我的角色</dt><dd id="caseR"></dd>
+      <dt>时间</dt><dd id="caseY"></dd>
+      <dt>工具</dt><dd class="tools" id="caseTo"></dd>
+      <dt id="caseLt" hidden>链接</dt><dd id="caseL" hidden></dd>
+    </dl>
+    <div class="nx"><button type="button" id="prev">上一件</button><button type="button" id="next">下一件</button></div>
+  </div>
+</dialog>
+
+<!-- ============ ♭6 · G · 经历 ============ -->
+<section class="journey deg-sec" id="journey">
+  <div class="rail"><div class="rail-in">
+    <span class="d">♭6</span>
+    <h2>经历<span>Journey</span></h2>
+    <p>不是履历表。几段时间，让我变成现在这样。</p>
+  </div></div>
+
+  <ol class="tl">
+    <li>
+      <span class="y">2021<small>七月，北京</small></span>
+      <div><h3>中国传媒大学，录音艺术（音响导演）</h3><p>四年在录音棚和现场之间来回。VR 毕设《白房间》做声音总监，从场景音效、空间音频到配乐全部自己走完。本科优秀毕业生。</p></div>
+    </li>
+    <li>
+      <span class="y">2024<small>七月，北京</small></span>
+      <div><h3>阿里巴巴虎鲸文娱（优酷），AI 产品经理实习</h3><p>参与一站式 AIGC 动画产品“鲸锐 AI”的竞品研究、需求评审和生成效果验收，为 AI 分镜产品写调研和 PRD，再和算法、设计、研发一起推进落地。也为 AI 剪辑工作站的音频库搭了音效标签体系和搜索匹配逻辑，并测试评估 TTS 语音模型和音效库。</p></div>
+    </li>
+    <li>
+      <span class="y">2024<small>八月，北京</small></span>
+      <div><h3>IdeaSign AI 设计工作室，创始人</h3><p>《我的海淀印象》拿到大学生 AI 艺术季海淀专项赛道特等奖，受邀在行业论坛分享，也在杭州数字艺术展展出。做的事从需求定义一直延伸到能点开的原型。</p></div>
+    </li>
+    <li>
+      <span class="y">2024<small>八月，北京</small></span>
+      <div><h3>中国传媒大学 AIGC 创意社，创始人兼社长</h3><p>自发办起来的校内 AIGC 社团。联动字节汽水音乐、快手可灵 AI、智谱清言和阿里优酷，办了多场 AI 创作活动，还作为主办方策划了全国首届 AI 音乐及 AI MV 创作赛事。</p></div>
+    </li>
+    <li>
+      <span class="y">2025<small>二月，北京</small></span>
+      <div><h3>中国传媒大学校团委 AI 部，创始人兼部长</h3><p>受学校老师任命，从零搭起校团委的 AI 职能部门。主导研发内部 AI 智能体，用在校园办公和宣传场景，项目获评校级大学生创新创业优秀项目。</p></div>
+    </li>
+    <li>
+      <span class="y">2025<small>七月，伦敦</small></span>
+      <div><h3>伦敦大学学院 UCL，音频体验设计硕士</h3><p>MA Designing Audio Experience。在伦敦做空间音频：高阶环绕声设计、广播音频、声音艺术展策划。毕业设计把网页前端和 REAPER 接成一个播放器，让视听作品能在多声道声场里被完整听见。参与 V&amp;A Museum CMMR2025 声音艺术展的空间音频交互逻辑设计与落地调试。</p></div>
+    </li>
+    <li>
+      <span class="y">2026<small>十月</small></span>
+      <div><h3>字节跳动，AI 音频模型运营与交付实习</h3><p>为 AI 音乐生成的 Reward Model 做成对比较和质量打分，推进音频 Caption 数据的生产与优化，并用 MOS/CMOS 方法做主观质量评测，给模型迭代提供数据。</p></div>
+    </li>
+  </ol>
+</section>
+
+<!-- ============ ♭7 · A · 联系 ============ -->
+<section class="contact deg-sec paper" id="contact">
+  <div class="rail"><div class="rail-in">
+    <span class="d">♭7</span>
+    <h2>联系<span>Contact</span></h2>
+  </div></div>
+
+  <div>
+    <p class="say">向着未知<br />前进ing</p>
+    <a class="mail" href="mailto:zczq452@ucl.ac.uk">zczq452@ucl.ac.uk</a>
+    <ul class="clist">
+      <li><span>电话</span><b>186 0087 3628</b></li>
+      <li><span>微信</span><b>LocRian0314</b></li>
+      <li><span>现居</span><b>北京，伦敦</b></li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <span>© 2026 李上 Locrian</span>
+  <span>B 洛克利亚调式：B C D E F G A</span>
+  <a href="#top">回到主音</a>
+</footer>
+
+<script>
+(()=>{
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------------------------------------------------------
+   七个音级：B4 C5 D5 E5 F5 G5 A5，step 为距五线谱底线 E4 的半格数
+   --------------------------------------------------------------- */
+const DEG = [
+  {d:'1',  lab:'主音', id:'top',     step:4,  f:493.88, here:true},
+  {d:'♭2', lab:'关于', id:'about',   step:5,  f:523.25},
+  {d:'♭3', lab:'声音', id:'sound',   step:6,  f:587.33},
+  {d:'4',  lab:'音乐', id:'music',   step:7,  f:659.25},
+  {d:'♭5', lab:'AIGC', id:'aigc',    step:8,  f:698.46, tri:true},
+  {d:'♭6', lab:'经历', id:'journey', step:9,  f:783.99},
+  {d:'♭7', lab:'联系', id:'contact', step:10, f:880.00},
+];
+// 五条线 E4 G4 B4 D5 F5 — 恰好都在 B 洛克利亚里
+const LINE_F = [329.63, 392.00, 493.88, 587.33, 698.46];
+
+/* ---------------- 声音 ---------------- */
+let ac=null, out=null, soundOn=false;
+function initAudio(){
+  if(ac) return;
+  ac = new (window.AudioContext||window.webkitAudioContext)();
+  out = ac.createGain(); out.gain.value=.8;
+  // 生成一段噪声冲激做混响
+  const len = ac.sampleRate*2.4, ir = ac.createBuffer(2,len,ac.sampleRate);
+  for(let c=0;c<2;c++){const d=ir.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3.2)}
+  const conv = ac.createConvolver(); conv.buffer=ir;
+  const wet = ac.createGain(); wet.gain.value=.38;
+  out.connect(ac.destination); out.connect(conv); conv.connect(wet); wet.connect(ac.destination);
+}
+function pluck(f, v=1){
+  if(!soundOn||!ac) return;
+  const t=ac.currentTime;
+  const g=ac.createGain(), lp=ac.createBiquadFilter();
+  lp.type='lowpass'; lp.frequency.setValueAtTime(3600,t); lp.frequency.exponentialRampToValueAtTime(500,t+.9);
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.16*v,t+.006); g.gain.exponentialRampToValueAtTime(.0001,t+2.2);
+  const o1=ac.createOscillator(), o2=ac.createOscillator(), g2=ac.createGain();
+  o1.type='triangle'; o1.frequency.value=f;
+  o2.type='sine'; o2.frequency.value=f*2.004; g2.gain.value=.28;
+  o1.connect(lp); o2.connect(g2); g2.connect(lp); lp.connect(g); g.connect(out);
+  o1.start(t); o2.start(t); o1.stop(t+2.3); o2.stop(t+2.3);
+}
+
+
+/* ---------------- 五线：一维波动方程 ---------------- */
+const cv=document.getElementById('staff'), cx=cv.getContext('2d');
+const hero=document.querySelector('.hero');
+const notesWrap=document.getElementById('notes');
+const N=180;                 // 每条线的采样点
+let W,H,dpr,x0,x1,yBase,gap;
+const lines=[0,1,2,3,4].map(()=>({u:new Float32Array(N),v:new Float32Array(N),last:0}));
+
+// 音符 DOM：同时也是首屏导航
+const noteEls = DEG.map((n,i)=>{
+  const a=document.createElement('a');
+  a.className='note'+(n.here?' here':'')+(n.tri?' tri':'')+(n.step>=8?' down':'');
+  a.href='#'+n.id;
+  a.setAttribute('aria-label', n.d+'，'+n.lab);
+  a.innerHTML='<span class="head"></span><span class="stem"></span><span class="cap"><span class="deg">'+n.d+'</span><span class="lab">'+n.lab+'</span></span>';
+  a.addEventListener('click',e=>{
+    if(soundOn){ initAudio(); pluck(n.f,1.1); }
+    kick(i);
+    if(n.here){ e.preventDefault(); strum(); }
+  });
+  notesWrap.appendChild(a);
+  return a;
+});
+
+function size(){
+  dpr=Math.min(devicePixelRatio||1,2);
+  W=hero.clientWidth; H=hero.clientHeight;
+  cv.width=W*dpr; cv.height=H*dpr; cx.setTransform(dpr,0,0,dpr,0,0);
+  const pad=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pad'))||40;
+  const mobile = W<760;
+  x0=mobile?0:pad*.0; x1=W;
+  gap=Math.max(12,Math.min(26,W*.017));
+  yBase=H*(mobile?.66:.71);          // 底线 E4，放在大字下方
+  hero.style.setProperty('--gap',gap+'px');
+  hero.style.setProperty('--staff-bottom',(yBase/H*100)+'%');
+  // 音符横向分布在右侧 70%，给大字留出左边
+  const L = mobile? W*.1 : pad*1.4+W*.04, R = W - (mobile? W*.08 : pad*1.4);
+  DEG.forEach((n,i)=>{ n.x = L + (R-L)*i/(DEG.length-1); });
+  noteEls.forEach((el,i)=>{
+    const n=DEG[i];
+    // 说明文字统一放在五线下方
+    const ny = yBase - n.step*gap/2;
+    el.style.setProperty('--cap', (yBase - ny + gap*2.2)+'px');
+  });
+}
+const lineY = k => yBase - k*gap;
+const idx = x => Math.max(1,Math.min(N-2,Math.round((x-x0)/(x1-x0)*(N-1))));
+function disp(k,x){ const f=(x-x0)/(x1-x0)*(N-1); const i=Math.max(0,Math.min(N-2,Math.floor(f))); const t=f-i; return lines[k].u[i]*(1-t)+lines[k].u[i+1]*t; }
+
+function impulse(k, x, amp, width=7){
+  const c=idx(x), L=lines[k];
+  for(let i=1;i<N-1;i++){ const d=(i-c)/width; L.v[i]+=amp*Math.exp(-d*d); }
+}
+function kick(i){ const n=DEG[i]; for(let k=0;k<5;k++) impulse(k,n.x,(k%2?-1:1)*(10-Math.abs(k*2-n.step/1.4)), 9); }
+function strum(){ for(let k=0;k<5;k++) setTimeout(()=>{ impulse(k, W*(.2+.6*Math.random()), (k%2?-1:1)*14, 14); pluck(LINE_F[k],.6); }, k*70); }
+
+// 指针穿过一条线 = 拨弦
+let px=null, py=null;
+function onMove(e){
+  const r=cv.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top;
+  if(px!==null){
+    for(let k=0;k<5;k++){
+      const ly=lineY(k)+disp(k,x), a=py-ly, b=y-ly;
+      if(a*b<0 || (a!==0 && b===0)){
+        const dy=y-py, amp=Math.max(-9,Math.min(9,dy*.7));
+        impulse(k,x,amp);
+        const now=performance.now();
+        if(now-lines[k].last>70){ lines[k].last=now; pluck(LINE_F[k], Math.min(1,.35+Math.abs(dy)/30)); }
+      }
+    }
+  }
+  px=x; py=y;
+}
+hero.addEventListener('pointermove',onMove);
+hero.addEventListener('pointerleave',()=>{px=py=null});
+
+function step(){
+  const c2=.42, damp=.016, lim=gap*1.5;
+  for(const L of lines){
+    const u=L.u,v=L.v;
+    for(let s=0;s<2;s++){
+      for(let i=1;i<N-1;i++){ v[i]+= c2*(u[i-1]+u[i+1]-2*u[i]) - damp*v[i]; }
+      for(let i=1;i<N-1;i++){ u[i]+=v[i]*.5; if(u[i]>lim)u[i]=lim; else if(u[i]<-lim)u[i]=-lim; }
+    }
+  }
+}
+function draw(){
+  cx.clearRect(0,0,W,H);
+  cx.strokeStyle='rgba(28,43,176,.82)'; cx.lineWidth=1.2;
+  for(let k=0;k<5;k++){
+    const y0=lineY(k), u=lines[k].u;
+    cx.beginPath();
+    for(let i=0;i<N;i++){ const x=x0+(x1-x0)*i/(N-1); const y=y0+u[i]; i?cx.lineTo(x,y):cx.moveTo(x,y); }
+    cx.stroke();
+  }
+  // A5 的加线
+  const a=DEG[6], ya=yBase-10*gap/2+disp(4,a.x);
+  cx.beginPath(); cx.moveTo(a.x-gap*1.1,ya); cx.lineTo(a.x+gap*1.1,ya); cx.stroke();
+  // 音符随所在线 / 相邻两线一起晃
+  DEG.forEach((n,i)=>{
+    const s=n.step/2, k=Math.floor(s), t=s-k;
+    const d = t===0 ? disp(Math.min(4,k),n.x) : (disp(Math.min(4,k),n.x)+disp(Math.min(4,k+1),n.x))/2;
+    const y = yBase - n.step*gap/2 + d;
+    noteEls[i].style.transform=`translate(${n.x}px,${y}px)`;
+  });
+}
+function loop(){ step(); draw(); raf=requestAnimationFrame(loop); }
+let raf=0, running=false;
+size(); draw();
+addEventListener('resize',()=>{ size(); draw(); });
+if(!reduce){
+  // 只在首屏可见时运行
+  new IntersectionObserver(([en])=>{
+    if(en.isIntersecting && !running){ running=true; loop(); }
+    else if(!en.isIntersecting && running){ running=false; cancelAnimationFrame(raf); }
+  }).observe(hero);
+  // 进场：五条线依次被拨一下
+  setTimeout(()=>{ for(let k=0;k<5;k++) setTimeout(()=>impulse(k, W*(.35+.1*k), (k%2?-1:1)*9, 16), 120*k); }, 700);
+}else{
+  hero.addEventListener('pointermove',()=>draw());
+}
+
+/* ---------------- 顶部迷你谱 ---------------- */
+const mini=document.getElementById('mini'), ms=document.getElementById('miniStaff');
+const miniDots = DEG.map((n,i)=>{
+  const a=document.createElement('a'); a.href='#'+n.id;
+  a.style.setProperty('--x',(6+i*88/6)+'%'); a.style.setProperty('--s',n.step);
+  a.innerHTML='<span>'+n.d+' '+n.lab+'</span>';
+  a.title=n.d+' '+n.lab;
+  ms.appendChild(a); return a;
+});
+const secs = DEG.map(n=>document.getElementById(n.id));
+function onScroll(){
+  mini.classList.toggle('on', scrollY > innerHeight*.7);
+  let cur=0; const mid=innerHeight*.35;
+  secs.forEach((s,i)=>{ if(s.getBoundingClientRect().top<=mid) cur=i; });
+  miniDots.forEach((d,i)=>{ d.classList.toggle('cur',i===cur); d.toggleAttribute('aria-current',i===cur); });
+}
+addEventListener('scroll',onScroll,{passive:true}); onScroll();
+
+/* ---------------- 每件作品一枚图形记谱 ---------------- */
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const R2=v=>Math.round(v*10)/10;
+function glyph(seed, kind){
+  const r=rng(seed*9973), w=200, h=120; let s='';
+  const sw='stroke="currentColor" fill="none" stroke-width="1.1"';
+  if(kind==='sound'){
+    // 声场：偏心同心圆 + 一条水平的听音线 + 散点
+    const cx0=40+r()*120, cy0=30+r()*60, n=3+Math.floor(r()*4);
+    for(let i=0;i<n;i++){ const rr=10+i*(9+r()*7); s+=`<circle cx="${R2(cx0+i*r()*4)}" cy="${R2(cy0)}" r="${R2(rr)}" ${sw} opacity="${R2(1-i/(n+1))}"/>`; }
+    s+=`<line x1="0" y1="${R2(cy0)}" x2="200" y2="${R2(cy0)}" stroke="currentColor" stroke-width=".8" stroke-dasharray="2 4" opacity=".6"/>`;
+    for(let i=0;i<14+r()*16;i++){ s+=`<circle cx="${R2(r()*w)}" cy="${R2(r()*h)}" r="${R2(.8+r()*1.8)}" fill="currentColor" opacity="${R2(.35+r()*.6)}"/>`; }
+  }else if(kind==='music'){
+    // 乐句：五线 + 一串音符 + 连杠
+    for(let k=0;k<5;k++) s+=`<line x1="0" y1="${36+k*10}" x2="200" y2="${36+k*10}" stroke="currentColor" stroke-width=".7" opacity=".45"/>`;
+    const m=5+Math.floor(r()*5); let pts=[];
+    for(let i=0;i<m;i++){ const x=14+i*(172/(m-1)), y=26+Math.floor(r()*13)*5; pts.push([x,y]);
+      s+=`<ellipse cx="${R2(x)}" cy="${y}" rx="5.4" ry="3.8" transform="rotate(-22 ${R2(x)} ${y})" fill="currentColor"/>`;
+      s+=`<line x1="${R2(x+5)}" y1="${y}" x2="${R2(x+5)}" y2="${y-26}" stroke="currentColor" stroke-width="1"/>`;
+    }
+    const b0=pts[0], b1=pts[pts.length-1], top=Math.min(...pts.map(p=>p[1]))-26;
+    s+=`<path d="M${R2(b0[0]+5)} ${top}L${R2(b1[0]+5)} ${top-2}L${R2(b1[0]+5)} ${top+2}L${R2(b0[0]+5)} ${top+4}Z" fill="currentColor"/>`;
+  }else{
+    // AIGC：被采样的格子，一部分点亮，一条生成的轨迹穿过
+    const cols=14, rows=8, cw=w/cols, ch=h/rows;
+    for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+      const on=r()<.22; s+=`<rect x="${R2(x*cw+2)}" y="${R2(y*ch+2)}" width="${R2(cw-4)}" height="${R2(ch-4)}" ${on?'fill="currentColor"':'fill="none" stroke="currentColor" stroke-width=".5" opacity=".35"'}/>`;
+    }
+    let d='M0 '+R2(h*r()); for(let i=1;i<=6;i++) d+=` L${R2(i*w/6)} ${R2(h*r())}`;
+    s+=`<path d="${d}" stroke="var(--bone)" stroke-width="1.3" fill="none"/>`;
+  }
+  return `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true">${s}</svg>`;
+}
+
+/* ---------------- 作品 ---------------- */
+const SCALE=[246.94,261.63,293.66,329.63,349.23,392,440,493.88,523.25,587.33,659.25,698.46,783.99,880];
+const KIND={sound:'声音作品',music:'音乐制作',aigc:'AIGC 与产品设计'};
+const Wk=[
+ {k:'sound',c:'#2b6fd6',s:11,t:'白房间',e:'White Room',y:'2025',r:'声音总监',d:'VR 游戏，本科毕业设计。从场景音效、空间音频到配乐，全流程声音设计都由我完成，并在 Unity 里集成。配乐的主题与尾声已在网易云上架。',to:['Unity','REAPER','空间音频','作曲'],v:'white-room.mp4',img:'assets/img/cover-white-room.jpg',l:['在网易云听主题','https://music.163.com/#/song?id=2158774942'],tag:'VR 游戏，Unity'},
+ {k:'sound',c:'#1f8a8a',s:27,t:'Time Travel',e:'Spatial Player',y:'2026',r:'设计与开发',d:'UCL 硕士毕业设计。用 Vibe Coding 搭了网页前端播放器，后端与 REAPER 联动，让视听作品能在多声道空间音频系统里展映。作品以一台古董节拍器为线索，从巴洛克一路走到 AI，讲音乐时间的变化。',to:['Web Audio','OSC','REAPER','Cursor'],img:'assets/img/cover-time-travel.jpg',ld:['打开作品网页','https://musical-time.pages.dev/'],tag:'UCL 毕设，Web Audio'},
+ {k:'sound',c:'#6a4fc4',s:5,t:'Winter',e:'Ambisonic',y:'2025',r:'录音与混音',d:'在 UCL 录音棚完成的全景声录音与混音，另出了双耳渲染版本。空间音频课程作业。',to:['3OA','双耳渲染','REAPER'],au:'assets/audio/winter.mp3',img:'assets/img/cover-winter.svg',tag:'3OA，双耳渲染'},
+ {k:'aigc',c:'#a8457a',s:44,t:'心镜',e:'Mirror',y:'AIGC',r:'声音设计与音效',d:'AIGC 短片的声音设计与音效，参赛作品。',to:['音效设计','混音'],v:'mirror.mp4',img:'assets/img/cover-mirror.jpg',tag:'AIGC 短片'},
+ {k:'aigc',c:'#d06b3a',s:61,t:'烟火',e:'Fireworks',y:'AIGC',r:'音效设计',d:'中传 AIGC 创意社的新春贺岁短片，负责音效设计。',to:['音效设计','AIGC'],img:'assets/img/cover-fireworks.jpg',ld:['在 B 站观看','https://www.bilibili.com/video/BV14bFHeYE9x/'],tag:'AIGC 贺岁短片'},
+ {k:'sound',c:'#3d7a52',s:73,t:'影视动画后期',e:'Contact, Scramble',y:'Film',r:'声音后期',d:'与导演系合作，为《Contact》《Scramble》两部动画短片重制声音后期。',to:['对白剪辑','拟音','混音'],v:[['Contact','contact.mp4'],['Scramble','scramble.mp4']],img:'assets/img/cover-post-film.jpg',tag:'动画短片'},
+ {k:'sound',c:'#b08a2e',s:88,t:'交响乐同期',e:'Symphony',y:'2024',r:'录音与混音',d:'管弦乐同期录音与混音，使用多话筒制式。',to:['多话筒制式','Pro Tools'],au:'assets/audio/symphony-live.mp3',img:'assets/img/cover-symphony-live.svg',tag:'管弦同期'},
+ {k:'sound',c:'#8f7a3a',s:91,t:'交响乐混音',e:'Orchestral Mix',y:'Mix',r:'混音',d:'管弦乐混音作品。',to:['混音'],au:'assets/audio/symphony-mix.mp3',img:'assets/img/cover-symphony-mix.svg',tag:'管弦混音'},
+ {k:'music',c:'#c2577a',s:95,t:'白房间 OST',e:'Soundtrack',y:'2025',r:'作曲、编曲、混音',d:'VR 游戏《白房间》的配乐，主题与尾声两首已在网易云上架。',to:['作曲','管弦配乐','混音'],img:'assets/img/cover-white-room-ost.svg',l:['在网易云听尾声','https://music.163.com/#/song?id=2158774102'],tag:'游戏配乐，已上架'},
+ {k:'music',c:'#7a3fb0',s:102,t:'Equinox Flower',e:'2.0',y:'Electronic',r:'作曲与声音设计',d:'实验电子。声音设计与结构写作，2.0 版本，附完整的设计思路文档。',to:['实验电子','声音设计'],au:'assets/audio/equinox-flower.mp3',img:'assets/img/cover-equinox-flower.svg',doc:'equinox',tag:'实验电子'},
+ {k:'music',c:'#e0904a',s:117,t:'新少年时',e:'Song',y:'Song',r:'作曲、编曲、混音',d:'流行歌曲，作曲、编曲、混音，并剪了配套影像。',to:['流行写作','剪辑'],v:'xin-shao-nian-shi.mp4',img:'assets/img/cover-xin-shao-nian-shi.svg',tag:'流行歌曲'},
+ {k:'music',c:'#2f6fb8',s:131,t:'Space Club',e:'Demo',y:'Demo',r:'作曲',d:'纯音乐作曲小样，编曲与混音还没做完。',to:['作曲'],au:'assets/audio/space-club.mp3',img:'assets/img/cover-space-club.svg',tag:'纯音乐小样'},
+ {k:'music',c:'#c4483a',s:149,t:'日落',e:'Remix',y:'Remix',r:'改编',d:'纯音乐。采样重组，节奏改写。',to:['采样','节奏编程'],au:'assets/audio/sunset-remix.mp3',img:'assets/img/cover-sunset.svg',tag:'采样重组'},
+ {k:'music',c:'#d14f8a',s:177,t:'流行乐混音',e:'Pop Mix',y:'Mix',r:'混音',d:'流行乐混音作品。',to:['混音'],au:'assets/audio/pop-mix.mp3',img:'assets/img/cover-pop-mix.svg',tag:'流行混音'},
+ {k:'music',c:'#2f9a7a',s:163,t:'宝岛',e:'T-Square cover',y:'Cover',r:'演奏、录音、混音',d:'宿舍四人组的室内乐改编，演奏、录音、混音都自己来。',to:['室内乐','录音','混音'],img:'assets/img/cover-formosa.jpg',ld:['在 B 站观看','https://www.bilibili.com/video/BV1Zx4y1Y7Ef/'],tag:'室内乐改编'},
+ {k:'aigc',c:'#c9a227',s:201,t:'我的海淀印象',e:'Haidian',y:'2024',r:'需求定义与架构',d:'AI 实时海报生成。负责需求定义与系统架构，受邀在行业论坛分享，并在杭州数字艺术展展出。',to:['AIGC','产品设计'],a:'大学生 AI 艺术季海淀专项特等奖',v:'haidian.mp4',img:'assets/img/cover-haidian.jpg',tag:'AI 实时海报'},
+ {k:'aigc',c:'#5b6fd6',t:'Mooji AI',e:'Prototype',y:'UI',r:'交互与高保真',d:'AI 创作工具。交互流程与高保真原型，用 Figma 完成。',to:['Figma','交互设计'],img:'assets/img/ui-mooji.jpg',l:['查看完整方案（PDF）','https://pub-2aa1d01a77d44b6a8321d1f7b2cf97b1.r2.dev/mooji-ai.pdf'],tag:'AI 创作工具'},
+ {k:'aigc',c:'#3a8fb8',t:'车机 HMI',e:'In-vehicle',y:'HMI',r:'界面设计',d:'车载系统界面，信息层级随驾驶场景调整。用 MasterGo 完成。',to:['MasterGo','HMI'],img:'assets/img/ui-car.jpg',tag:'车载界面'},
+ {k:'aigc',c:'#4f8a5b',t:'校团委 Agent',e:'Internal tool',y:'Agent',r:'对话流程与原型',d:'校团委内部效率工具。对话流程与页面原型，用 Cursor 搭出来。',to:['Cursor','Agent'],img:'assets/img/ui-easy.jpg',tag:'内部效率工具'},
+ {k:'aigc',c:'#9b4fc4',s:233,t:'Seedio',e:'AI music community',y:'2026',r:'产品设计与前端',d:'AI 音乐交流平台，个人网站。产品设计与前端实现都由我完成。',to:['产品设计','前端'],img:'assets/img/cover-seedio.jpg',ld:['打开 seedio.art','https://seedio.art/'],tag:'AI 音乐社区'},
+ {k:'aigc',c:'#c8323c',t:'AIGC 创意社官网',e:'AIGC Design Club',y:'2026',r:'产品设计与前端',d:'中国传媒大学 AIGC 创意社的官方网站，用来发布社团动态、展示作品、管理后台内容。产品设计与前端实现都由我完成。',to:['产品设计','前端'],img:'assets/img/cover-aigcdc.jpg',ld:['打开社团官网','https://cuc-aigc-dc.pages.dev/'],tag:'社团官网'},
+];
+const MEDIA='https://pub-2aa1d01a77d44b6a8321d1f7b2cf97b1.r2.dev/';
+const DOCS={equinox:{t:'音乐设计思路',p:[
+'这首作品从东方的恐怖元素中汲取灵感，旨在呈现中国民间传说中的冥界——死后世界。在这一传统观念中，逝者的灵魂必须跨越幽暗的忘川河，开始新的生命轮回。歌曲的标题“彼岸花”指代冥界中特有的花卉，这种花以其奇异而美丽的外观著称。这部作品分为五个章节，依次描绘了灵魂的旅程：从在忘川河畔的徘徊，到彼岸花的凝视，再到对往生的追忆，经历忘却一切的超脱，最终在挣扎与解脱之间完成轮回的过渡。整首作品大量使用恐怖元素，旨在营造压抑的氛围，让听众身临其境地感受死亡的恐惧与无力感。作品的动机基于佛教寺庙钟声的变奏，通过效果插件的添加，改变了其后续音色，并成为贯穿作品的主题元素。接下来是每个部分设计的思路解读。',
+'“忘川”：这一段作为引入部分，旨在营造出诡异的氛围，让听众迅速融入作品所描绘的环境中。该段的核心音色是佛教寺庙钟声，使用了Delay、Pitch Shifter以及混响自动化插件来制造声音的忽高忽低、忽远忽近的效果。此钟声将贯穿整部作品，逐渐变化。背景音效设计上，我加入了低频音色并增加了一些失真元素，创造出空旷、寂静且带有神秘感的氛围。同时，我还使用了高频合成器音色点缀，表达出一种诡异的风吹过的感觉。',
+'“彼岸花”第二段描绘了彼岸花的形象，意在展现其诡异而灿烂的美。经过高频合成器的过渡后，整体环境背景的音色变得更加温暖，但依然带有一丝恐怖的气息。在这一段中，引入了第二个主要音色——带有Delay效果并逐渐降Key的钟声，仿佛倒计时般推着听众不断进入接下来的章节。此外，我使用了Distortion、Filter、FuzzWah等插件来制作温暖而又恐怖的音色，通过这些效果营造出一种既迷人又不安的感觉。同时，使用了Auto Pan技巧，使声音在空间中环绕，从而加深了音效的恐怖感，使其不断萦绕在听者耳畔。',
+'“往生”第三段以回忆为主题，旨在传达回望过去的情感。主要音色是一个大调的钟声，代表着儿时的快乐回忆。此时的环境虽然安静，却依然有钟声的倒计时效果在提醒着，所有的回忆都无法真正回到现实世界。在音效设计上，我使用了大量的Delay、Distortion以及Tremble插件，通过这些效果增加了音色的复杂性与层次感，营造出一种模糊、失真且难以捉摸的感觉，象征着回忆的扭曲与遥远。同时，我还利用了降Key的技巧，使音色逐渐下沉，为听众带来一种不断向前推进、无法回头的感觉，增强了情感上的紧迫感。当一切突然安静时，一声三角铁的声音打破这一切，回到了冥界。此时，音色发生了反转，节奏和速度也发生了变化，给人一种快速穿越的感觉，最终回到飞升的现场。',
+'“飞升”第四段以旋律性为主，旨在烘托出庄严肃杀的氛围，将整体情感推向高潮。此段的设计着重表现灵魂飞升过程中的痛苦挣扎和对生存的执念。音色设计上，我使用了沉重的低频和饱满的Pad来铺垫底层情感，同时通过高频音效表现出万物撕裂的效果，增强了压迫感。旋律的推进逐渐加剧，音乐中加入了更多层次感，随着音色的逐步强化和节奏的逐渐加速，情感也愈发剧烈地攀升，直至高潮部分的到来。通过这些音效和旋律的交织，表现出一种无法避免的命运感，直至最终的飞升阶段。随着音乐的推进，所有的痛苦与挣扎逐渐转化为一种释然和坚定，推动着情感朝着最终的解脱与飞升前进。',
+'“渡”最终，随着寺庙钟声的再次响起，风铃、三角铁等轻快的音效重新出现，世界恢复宁静。此时，一切似乎随风消散，回归了安宁，仿佛没有人会在意曾经的纷扰。'
+]}};
+const videoHTML=(file,label)=>`${label?`<p class="ml">${label}</p>`:''}<video controls playsinline preload="metadata" src="${MEDIA+file}"></video>`;
+const mediaHTML=w=>{
+  const v=!w.v?'':Array.isArray(w.v)?w.v.map(([l,f])=>videoHTML(f,l)).join(''):videoHTML(w.v);
+  const a=w.au?`<audio controls preload="metadata" src="${w.au}"></audio>`:'';
+  const d=w.doc?`<details class="cdoc"><summary>${DOCS[w.doc].t}</summary>${DOCS[w.doc].p.map(x=>`<p>${x}</p>`).join('')}</details>`:'';
+  return v+a+d;
+};
+const coverHTML=w=>w.img?`<img src="${w.img}" alt="" draggable="false">`:`<span class="art" aria-hidden="true">${glyph(w.s,w.k)}</span>`;
+
+/* 详情抽屉 */
+const dlg=document.getElementById('case'), $id=id=>document.getElementById(id); let curI=0;
+function openCase(i){
+  curI=i; const w=Wk[i], same=Wk.filter(x=>x.k===w.k);
+  $id('caseV').style.background=`radial-gradient(120% 90% at 18% 8%,color-mix(in srgb,${w.c} 70%,#fff 30%),transparent 55%),linear-gradient(155deg,${w.c},color-mix(in srgb,${w.c} 45%,#0b1236))`;
+  $id('caseV').innerHTML=coverHTML(w);
+  $id('caseK').textContent=KIND[w.k]+'，第 '+(same.indexOf(w)+1)+' / '+same.length+' 件';
+  $id('caseT').innerHTML=`${w.t}<span>${w.e}</span>`;
+  $id('caseD').innerHTML=w.d+(w.ld?` <a href="${w.ld[1]}" target="_blank" rel="noopener" style="text-decoration:underline">${w.ld[0]}</a>`:'');
+  $id('caseM').innerHTML=mediaHTML(w);
+  $id('caseA').innerHTML=w.a?`<span class="aw2">${w.a}</span>`:'';
+  $id('caseR').textContent=w.r; $id('caseY').textContent=w.y;
+  $id('caseTo').innerHTML=w.to.map(t=>`<span>${t}</span>`).join('');
+  const hasL=!!w.l; $id('caseLt').hidden=!hasL; $id('caseL').hidden=!hasL;
+  $id('caseL').innerHTML=hasL?`<a href="${w.l[1]}" target="_blank" rel="noopener" style="text-decoration:underline">${w.l[0]}</a>`:'';
+  if(!dlg.open) dlg.showModal(); dlg.scrollTop=0;
+}
+$id('caseX').addEventListener('click',()=>dlg.close());
+dlg.addEventListener('close',()=>{$id('caseM').innerHTML=''});
+dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close()});
+const stepCase=d=>openCase((curI+d+Wk.length)%Wk.length);
+$id('prev').addEventListener('click',()=>stepCase(-1)); $id('next').addEventListener('click',()=>stepCase(1));
+dlg.addEventListener('keydown',e=>{if(e.key==='ArrowRight')stepCase(1);if(e.key==='ArrowLeft')stepCase(-1)});
+
+/* 层叠卡牌：中间一张在前，两侧向后转 */
+document.querySelectorAll('.flow').forEach(flow=>{
+  const k=flow.dataset.k, stage=flow.querySelector('.stage');
+  const list=Wk.map((w,i)=>({w,i})).filter(o=>o.w.k===k), n=list.length;
+  stage.innerHTML=list.map(({w},j)=>`<button class="fc" type="button" data-j="${j}" style="--c:${w.c}" aria-label="${w.t}，${w.tag}">
+    <span class="cover">${coverHTML(w)}<span class="yr">${w.y}</span>${w.a?'<span class="aw">特等奖</span>':''}</span>
+    <span class="tx"><h4>${w.t}</h4><span class="en">${w.e}</span></span>
+    <span class="kd"><i></i>${w.tag}</span>
+  </button>`).join('');
+  const cards=[...stage.children];
+  let pos=Math.floor((n-1)/2), target=pos, raf=0, cur=-1, dragging=false;
+  const cw=()=>cards[0].offsetWidth||170;
+  function render(){
+    const w=cw();
+    cards.forEach((c,j)=>{
+      const d=j-pos, ad=Math.abs(d), sg=Math.sign(d);
+      const x=sg*(Math.min(ad,1)*w*.86+Math.max(0,ad-1)*w*.46);
+      const op=ad>3.4?0:1-Math.max(0,ad-2.4);
+      c.style.transform=`translate3d(${x}px,0,${-Math.min(ad,4)*110}px) rotateY(${-Math.max(-1,Math.min(1,d))*34}deg) scale(${1-Math.min(ad,4)*.05})`;
+      c.style.opacity=op; c.style.filter=`saturate(${1-Math.min(ad,3)*.22}) brightness(${1+Math.min(ad,3)*.03})`;
+      c.style.zIndex=100-Math.round(ad*10); c.style.pointerEvents=op<.1?'none':'auto';
+      c.tabIndex=Math.round(pos)===j?0:-1;
+    });
+    const a=Math.round(pos); if(a!==cur){cur=a; cards.forEach((c,j)=>c.classList.toggle('on',j===a));}
+  }
+  function tick(){
+    if(!dragging){ const d=target-pos; pos+= reduce?d:d*.14; if(Math.abs(d)<.001){pos=target;render();raf=0;return;} }
+    render(); raf=requestAnimationFrame(tick);
+  }
+  const kick=()=>{ if(!raf) raf=requestAnimationFrame(tick); };
+  const go=j=>{ target=Math.max(0,Math.min(n-1,j)); kick(); };
+  let sx=0, sp=0, moved=0, lastX=0, vx=0, downCard=null;
+  flow.addEventListener('pointerdown',e=>{ if(e.button>0) return; dragging=true; moved=0; sx=lastX=e.clientX; sp=pos; vx=0; downCard=e.target.closest('.fc'); flow.setPointerCapture(e.pointerId); kick(); });
+  flow.addEventListener('pointermove',e=>{ if(!dragging) return; const dx=e.clientX-sx; moved=Math.max(moved,Math.abs(dx)); if(moved>4) flow.classList.add('dragging');
+    pos=Math.max(-.35,Math.min(n-.65,sp-dx/(cw()*.8))); vx=e.clientX-lastX; lastX=e.clientX; });
+  const end=()=>{ if(!dragging) return; dragging=false; flow.classList.remove('dragging');
+    if(moved<5&&downCard){ const j=+downCard.dataset.j; if(j===Math.round(pos)) openCase(list[j].i); else go(j); }
+    else go(Math.round(pos-vx/(cw()*.25))); };
+  flow.addEventListener('pointerup',end); flow.addEventListener('pointercancel',end);
+  flow.addEventListener('keydown',e=>{ if(e.key==='ArrowRight'){e.preventDefault();go(Math.round(target)+1)} if(e.key==='ArrowLeft'){e.preventDefault();go(Math.round(target)-1)} if(e.key==='Enter'&&e.target===flow) openCase(list[Math.round(target)].i); });
+  stage.addEventListener('click',e=>{ if(e.detail!==0) return; const c=e.target.closest('.fc'); if(c) openCase(list[+c.dataset.j].i); });
+  let wacc=0, wt=0;
+  flow.addEventListener('wheel',e=>{ if(Math.abs(e.deltaX)<=Math.abs(e.deltaY)) return; e.preventDefault(); wacc+=e.deltaX; clearTimeout(wt);
+    if(Math.abs(wacc)>60){ go(Math.round(target)+Math.sign(wacc)); wacc=0; } wt=setTimeout(()=>wacc=0,160); },{passive:false});
+  addEventListener('resize',render);
+  render();
+});
+})();
+</script>
+</body>
+</html>

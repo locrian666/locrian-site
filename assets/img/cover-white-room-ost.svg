@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" preserveAspectRatio="xMidYMid slice">
+  <filter id="g"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2"/><feColorMatrix values="0 0 0 0 .1 0 0 0 0 .15 0 0 0 0 .6 0 0 0 .07 0"/></filter>
+  <defs><g id="n"><ellipse rx="27" ry="19" transform="rotate(-22)" fill="#1c2bb0"/><path d="M24 -8 V-120" stroke="#1c2bb0" stroke-width="6"/></g></defs>
+  <rect width="1280" height="800" fill="#f7f4ec"/>
+  <path d="M0 0 L240 150 V620 L0 800 Z" fill="#e4dfd2"/>
+  <path d="M1280 0 L1040 150 V620 L1280 800 Z" fill="#e4dfd2"/>
+  <path d="M0 800 L240 620 H1040 L1280 800 Z" fill="#d8d2c2"/>
+  <path d="M0 0 L240 150 H1040 L1280 0 Z" fill="#fbf9f4"/>
+  <path d="M240 150 H1040 V620 H240 Z" fill="none" stroke="#c9c2b1" stroke-width="3"/>
+  <g stroke="#1c2bb0" stroke-width="3" fill="none">
+    <path d="M160 340 C400 280 640 440 1120 300"/><path d="M160 370 C400 310 640 470 1120 330"/><path d="M160 400 C400 340 640 500 1120 360"/><path d="M160 430 C400 370 640 530 1120 390"/><path d="M160 460 C400 400 640 560 1120 420"/>
+  </g>
+  <use href="#n" x="320" y="385"/><use href="#n" x="480" y="412"/><use href="#n" x="650" y="470"/><use href="#n" x="830" y="412"/>
+  <g transform="translate(990 355)"><ellipse rx="27" ry="19" transform="rotate(-22)" fill="#c2577a"/><path d="M24 -8 V-120" stroke="#c2577a" stroke-width="6"/></g>
+  <rect width="1280" height="800" filter="url(#g)"/>
+</svg>
