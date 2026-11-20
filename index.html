@@ -172,27 +172,31 @@ img{display:block;max-width:100%}
 .drag-hint svg{width:34px;height:14px}
 .drag-hint svg .h{animation:nudge 1.8s ease-in-out infinite}
 @keyframes nudge{0%,100%{transform:translateX(-4px)}50%{transform:translateX(4px)}}
-.flow{position:relative;height:clamp(340px,32vw,420px);perspective:1300px;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none;outline:none;overflow:visible}
+.flow{position:relative;height:clamp(470px,40vw,560px);perspective:1300px;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none;outline:none;overflow:visible}
 .flow:focus-visible{outline:1px solid var(--hair);outline-offset:6px;border-radius:20px}
 .flow.dragging{cursor:grabbing}
 .flow::after{content:"";position:absolute;left:50%;bottom:0;width:min(520px,80%);height:56px;translate:-50% 0;border-radius:50%;background:radial-gradient(closest-side,rgba(28,43,176,.12),transparent);pointer-events:none}
 .stage{position:absolute;inset:0;transform-style:preserve-3d}
-.fc{--cw:clamp(150px,13vw,190px);--c:#2b59c3;position:absolute;left:50%;top:46%;width:var(--cw);height:calc(var(--cw) * 1.4);margin:calc(var(--cw) * -.7) 0 0 calc(var(--cw) * -.5);
+.fc{--cw:clamp(230px,19vw,290px);--c:#2b59c3;position:absolute;left:50%;top:47%;width:var(--cw);height:calc(var(--cw) * 1.5);margin:calc(var(--cw) * -.75) 0 0 calc(var(--cw) * -.5);display:flex;flex-direction:column;
   border-radius:16px;padding:8px;text-align:left;color:var(--klein);font:inherit;cursor:inherit;will-change:transform,opacity,filter;
   background:#fff;border:1px solid color-mix(in srgb,var(--c) 22%,#e3e6f1);
   box-shadow:0 26px 44px -24px rgba(28,43,176,.38),0 2px 6px rgba(28,43,176,.05)}
 .fc.on{box-shadow:0 34px 60px -22px color-mix(in srgb,var(--c) 60%,rgba(28,43,176,.5)),0 0 0 1px color-mix(in srgb,var(--c) 40%,transparent)}
-.fc .cover{position:relative;display:block;height:60%;border-radius:10px;overflow:hidden;color:#fff;
+.fc .cover{position:relative;display:block;flex:none;height:46%;border-radius:10px;overflow:hidden;color:#fff;
   background:radial-gradient(120% 90% at 20% 10%,color-mix(in srgb,var(--c) 70%,#fff 30%) 0%,transparent 58%),linear-gradient(155deg,var(--c),color-mix(in srgb,var(--c) 70%,#0b1236))}
 .fc .cover .art{position:absolute;inset:14% 8%;opacity:.85}
 .fc .cover .art svg{width:100%;height:100%;overflow:visible}
 .fc .cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top}
 .fc .yr{position:absolute;right:8px;top:6px;font-family:var(--serif);font-style:italic;font-size:12px;opacity:.9}
 .fc .aw{position:absolute;left:8px;top:7px;font-family:var(--sans);font-size:10px;padding:1px 7px;border-radius:99px;background:var(--sulfur);color:var(--night);font-weight:600}
-.fc .tx{display:block;padding:10px 4px 0}
-.fc h4{font-family:var(--cn);font-weight:900;font-size:clamp(15px,1.2vw,18px);line-height:1.25;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc .tx{display:flex;flex-direction:column;flex:1;min-height:0;padding:12px 6px 30px}
+.fc h4{font-family:var(--cn);font-weight:900;font-size:clamp(17px,1.35vw,20px);line-height:1.25;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fc .en{display:block;font-family:var(--serif);font-style:italic;font-size:13px;color:var(--mist);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fc .kd{position:absolute;left:12px;bottom:10px;right:10px;display:flex;align-items:center;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mist);white-space:nowrap;overflow:hidden}
+.fc .ro{display:block;margin-top:8px;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc .ds{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;margin-top:4px;font-family:var(--cn);font-size:13px;line-height:1.65;color:var(--klein);opacity:.9}
+.fc .ds,.fc .ro{transition:opacity .35s}
+.fc:not(.on) .ds{opacity:.28}
+.fc .kd{position:absolute;left:14px;bottom:12px;right:12px;display:flex;align-items:center;gap:6px;font-family:var(--sans);font-size:12px;color:var(--mist);white-space:nowrap;overflow:hidden}
 .fc .kd i{flex:none;width:7px;height:7px;border-radius:50%;background:var(--c)}
 
 /* ---------- 详情抽屉 ---------- */
@@ -226,7 +230,7 @@ dialog.case[open]{animation:slidein .5s cubic-bezier(.2,.7,.2,1)}
 .case .nx{display:flex;justify-content:space-between;gap:10px;margin-top:34px}
 .case .nx button{font-family:var(--sans);font-size:14px;padding:9px 18px;border-radius:99px;border:1px solid var(--mist);background:none;color:var(--bone);cursor:pointer}
 .case .nx button:last-child{background:var(--klein);color:#fff;border-color:var(--klein)}
-@media (max-width:760px){ .fc .kd{display:none} .works-sec{overflow-x:clip} }
+@media (max-width:760px){ .fc .kd{display:none} .fc .tx{padding-bottom:10px} .works-sec{overflow-x:clip} }
 
 /* ---------- ♭6 经历 ---------- */
 .journey{background:var(--paper);border-top:1px solid var(--hair)}
@@ -715,24 +719,24 @@ const Wk=[
  {k:'sound',c:'#2b6fd6',s:11,t:'白房间',e:'White Room',y:'2025',r:'声音总监',d:'VR 游戏，本科毕业设计。从场景音效、空间音频到配乐，全流程声音设计都由我完成，并在 Unity 里集成。配乐的主题与尾声已在网易云上架。',to:['Unity','REAPER','空间音频','作曲'],v:'white-room.mp4',img:'assets/img/cover-white-room.jpg',l:['在网易云听主题','https://music.163.com/#/song?id=2158774942'],tag:'VR 游戏，Unity'},
  {k:'sound',c:'#1f8a8a',s:27,t:'Time Travel',e:'Spatial Player',y:'2026',r:'设计与开发',d:'UCL 硕士毕业设计。用 Vibe Coding 搭了网页前端播放器，后端与 REAPER 联动，让视听作品能在多声道空间音频系统里展映。作品以一台古董节拍器为线索，从巴洛克一路走到 AI，讲音乐时间的变化。',to:['Web Audio','OSC','REAPER','Cursor'],img:'assets/img/cover-time-travel.jpg',ld:['打开作品网页','https://musical-time.pages.dev/'],tag:'UCL 毕设，Web Audio'},
  {k:'sound',c:'#6a4fc4',s:5,t:'Winter',e:'Ambisonic',y:'2025',r:'录音与混音',d:'在 UCL 录音棚完成的全景声录音与混音，另出了双耳渲染版本。空间音频课程作业。',to:['3OA','双耳渲染','REAPER'],au:'assets/audio/winter.mp3',img:'assets/img/cover-winter.svg',tag:'3OA，双耳渲染'},
- {k:'aigc',c:'#a8457a',s:44,t:'心镜',e:'Mirror',y:'AIGC',r:'声音设计与音效',d:'AIGC 短片的声音设计与音效，参赛作品。',to:['音效设计','混音'],v:'mirror.mp4',img:'assets/img/cover-mirror.jpg',tag:'AIGC 短片'},
- {k:'aigc',c:'#d06b3a',s:61,t:'烟火',e:'Fireworks',y:'AIGC',r:'音效设计',d:'中传 AIGC 创意社的新春贺岁短片，负责音效设计。',to:['音效设计','AIGC'],img:'assets/img/cover-fireworks.jpg',ld:['在 B 站观看','https://www.bilibili.com/video/BV14bFHeYE9x/'],tag:'AIGC 贺岁短片'},
+ {k:'aigc',c:'#a8457a',s:44,t:'心镜',e:'Mirror',y:'AIGC',r:'带队制作',d:'我带领团队完成的 AIGC 动画作品，参赛作品。',to:['AIGC 动画','团队统筹'],v:'mirror.mp4',img:'assets/img/cover-mirror.jpg',tag:'AIGC 动画'},
+ {k:'aigc',c:'#d06b3a',s:61,t:'烟火',e:'Fireworks',y:'AIGC',r:'独立制作',d:'中传 AIGC 创意社的新春贺岁短片，全部由我一个人独立制作完成。',to:['AIGC','独立制作'],img:'assets/img/cover-fireworks.jpg',ld:['在 B 站观看','https://www.bilibili.com/video/BV14bFHeYE9x/'],tag:'AIGC 贺岁短片'},
  {k:'sound',c:'#3d7a52',s:73,t:'影视动画后期',e:'Contact, Scramble',y:'Film',r:'声音后期',d:'与导演系合作，为《Contact》《Scramble》两部动画短片重制声音后期。',to:['对白剪辑','拟音','混音'],v:[['Contact','contact.mp4'],['Scramble','scramble.mp4']],img:'assets/img/cover-post-film.jpg',tag:'动画短片'},
  {k:'sound',c:'#b08a2e',s:88,t:'交响乐同期',e:'Symphony',y:'2024',r:'录音与混音',d:'管弦乐同期录音与混音，使用多话筒制式。',to:['多话筒制式','Pro Tools'],au:'assets/audio/symphony-live.mp3',img:'assets/img/cover-symphony-live.svg',tag:'管弦同期'},
  {k:'sound',c:'#8f7a3a',s:91,t:'交响乐混音',e:'Orchestral Mix',y:'Mix',r:'混音',d:'管弦乐混音作品。',to:['混音'],au:'assets/audio/symphony-mix.mp3',img:'assets/img/cover-symphony-mix.svg',tag:'管弦混音'},
+ {k:'music',c:'#2f6fb8',s:131,t:'Space Club',e:'Demo',y:'Demo',r:'作曲与制作',d:'我制作的歌曲小样。',to:['作曲','歌曲小样'],au:'assets/audio/space-club.mp3',img:'assets/img/cover-space-club.svg',tag:'歌曲小样'},
  {k:'music',c:'#c2577a',s:95,t:'白房间 OST',e:'Soundtrack',y:'2025',r:'作曲、编曲、混音',d:'VR 游戏《白房间》的配乐，主题与尾声两首已在网易云上架。',to:['作曲','管弦配乐','混音'],img:'assets/img/cover-white-room-ost.svg',l:['在网易云听尾声','https://music.163.com/#/song?id=2158774102'],tag:'游戏配乐，已上架'},
  {k:'music',c:'#7a3fb0',s:102,t:'Equinox Flower',e:'2.0',y:'Electronic',r:'作曲与声音设计',d:'实验电子。声音设计与结构写作，2.0 版本，附完整的设计思路文档。',to:['实验电子','声音设计'],au:'assets/audio/equinox-flower.mp3',img:'assets/img/cover-equinox-flower.svg',doc:'equinox',tag:'实验电子'},
  {k:'music',c:'#e0904a',s:117,t:'新少年时',e:'Song',y:'Song',r:'作曲、编曲、混音',d:'流行歌曲，作曲、编曲、混音，并剪了配套影像。',to:['流行写作','剪辑'],v:'xin-shao-nian-shi.mp4',img:'assets/img/cover-xin-shao-nian-shi.svg',tag:'流行歌曲'},
- {k:'music',c:'#2f6fb8',s:131,t:'Space Club',e:'Demo',y:'Demo',r:'作曲',d:'纯音乐作曲小样，编曲与混音还没做完。',to:['作曲'],au:'assets/audio/space-club.mp3',img:'assets/img/cover-space-club.svg',tag:'纯音乐小样'},
  {k:'music',c:'#c4483a',s:149,t:'日落',e:'Remix',y:'Remix',r:'改编',d:'纯音乐。采样重组，节奏改写。',to:['采样','节奏编程'],au:'assets/audio/sunset-remix.mp3',img:'assets/img/cover-sunset.svg',tag:'采样重组'},
  {k:'music',c:'#d14f8a',s:177,t:'流行乐混音',e:'Pop Mix',y:'Mix',r:'混音',d:'流行乐混音作品。',to:['混音'],au:'assets/audio/pop-mix.mp3',img:'assets/img/cover-pop-mix.svg',tag:'流行混音'},
  {k:'music',c:'#2f9a7a',s:163,t:'宝岛',e:'T-Square cover',y:'Cover',r:'演奏、录音、混音',d:'宿舍四人组的室内乐改编，演奏、录音、混音都自己来。',to:['室内乐','录音','混音'],img:'assets/img/cover-formosa.jpg',ld:['在 B 站观看','https://www.bilibili.com/video/BV1Zx4y1Y7Ef/'],tag:'室内乐改编'},
  {k:'aigc',c:'#c9a227',s:201,t:'我的海淀印象',e:'Haidian',y:'2024',r:'需求定义与架构',d:'AI 实时海报生成。负责需求定义与系统架构，受邀在行业论坛分享，并在杭州数字艺术展展出。',to:['AIGC','产品设计'],a:'大学生 AI 艺术季海淀专项特等奖',v:'haidian.mp4',img:'assets/img/cover-haidian.jpg',tag:'AI 实时海报'},
+ {k:'aigc',c:'#9b4fc4',s:233,t:'Seedio',e:'AI music community',y:'2026',r:'产品设计与前端',d:'AI 音乐交流平台，个人网站。产品设计与前端实现都由我完成。',to:['产品设计','前端'],img:'assets/img/cover-seedio.jpg',ld:['打开 seedio.art','https://seedio.art/'],tag:'AI 音乐社区'},
+ {k:'aigc',c:'#c8323c',t:'AIGC 创意社官网',e:'AIGC Design Club',y:'2026',r:'产品设计与前端',d:'中国传媒大学 AIGC 创意社的官方网站，用来发布社团动态、展示作品、管理后台内容。产品设计与前端实现都由我完成。',to:['产品设计','前端'],img:'assets/img/cover-aigcdc.jpg',ld:['打开社团官网','https://cuc-aigc-dc.pages.dev/'],tag:'社团官网'},
  {k:'aigc',c:'#5b6fd6',t:'Mooji AI',e:'Prototype',y:'UI',r:'交互与高保真',d:'AI 创作工具。交互流程与高保真原型，用 Figma 完成。',to:['Figma','交互设计'],img:'assets/img/ui-mooji.jpg',l:['查看完整方案（PDF）','https://pub-2aa1d01a77d44b6a8321d1f7b2cf97b1.r2.dev/mooji-ai.pdf'],tag:'AI 创作工具'},
  {k:'aigc',c:'#3a8fb8',t:'车机 HMI',e:'In-vehicle',y:'HMI',r:'界面设计',d:'车载系统界面，信息层级随驾驶场景调整。用 MasterGo 完成。',to:['MasterGo','HMI'],img:'assets/img/ui-car.jpg',tag:'车载界面'},
  {k:'aigc',c:'#4f8a5b',t:'校团委 Agent',e:'Internal tool',y:'Agent',r:'对话流程与原型',d:'校团委内部效率工具。对话流程与页面原型，用 Cursor 搭出来。',to:['Cursor','Agent'],img:'assets/img/ui-easy.jpg',tag:'内部效率工具'},
- {k:'aigc',c:'#9b4fc4',s:233,t:'Seedio',e:'AI music community',y:'2026',r:'产品设计与前端',d:'AI 音乐交流平台，个人网站。产品设计与前端实现都由我完成。',to:['产品设计','前端'],img:'assets/img/cover-seedio.jpg',ld:['打开 seedio.art','https://seedio.art/'],tag:'AI 音乐社区'},
- {k:'aigc',c:'#c8323c',t:'AIGC 创意社官网',e:'AIGC Design Club',y:'2026',r:'产品设计与前端',d:'中国传媒大学 AIGC 创意社的官方网站，用来发布社团动态、展示作品、管理后台内容。产品设计与前端实现都由我完成。',to:['产品设计','前端'],img:'assets/img/cover-aigcdc.jpg',ld:['打开社团官网','https://cuc-aigc-dc.pages.dev/'],tag:'社团官网'},
 ];
 const MEDIA='https://pub-2aa1d01a77d44b6a8321d1f7b2cf97b1.r2.dev/';
 const DOCS={equinox:{t:'音乐设计思路',p:[
@@ -782,7 +786,7 @@ document.querySelectorAll('.flow').forEach(flow=>{
   const list=Wk.map((w,i)=>({w,i})).filter(o=>o.w.k===k), n=list.length;
   stage.innerHTML=list.map(({w},j)=>`<button class="fc" type="button" data-j="${j}" style="--c:${w.c}" aria-label="${w.t}，${w.tag}">
     <span class="cover">${coverHTML(w)}<span class="yr">${w.y}</span>${w.a?'<span class="aw">特等奖</span>':''}</span>
-    <span class="tx"><h4>${w.t}</h4><span class="en">${w.e}</span></span>
+    <span class="tx"><h4>${w.t}</h4><span class="en">${w.e}</span>${w.r?`<span class="ro">${w.r}</span>`:''}<span class="ds">${w.d||''}</span></span>
     <span class="kd"><i></i>${w.tag}</span>
   </button>`).join('');
   const cards=[...stage.children];
@@ -792,7 +796,7 @@ document.querySelectorAll('.flow').forEach(flow=>{
     const w=cw();
     cards.forEach((c,j)=>{
       const d=j-pos, ad=Math.abs(d), sg=Math.sign(d);
-      const x=sg*(Math.min(ad,1)*w*.86+Math.max(0,ad-1)*w*.46);
+      const x=sg*(Math.min(ad,1)*w*.98+Math.max(0,ad-1)*w*.5);
       const op=ad>3.4?0:1-Math.max(0,ad-2.4);
       c.style.transform=`translate3d(${x}px,0,${-Math.min(ad,4)*110}px) rotateY(${-Math.max(-1,Math.min(1,d))*34}deg) scale(${1-Math.min(ad,4)*.05})`;
       c.style.opacity=op; c.style.filter=`saturate(${1-Math.min(ad,3)*.22}) brightness(${1+Math.min(ad,3)*.03})`;
